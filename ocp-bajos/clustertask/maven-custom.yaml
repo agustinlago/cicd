@@ -59,7 +59,7 @@ spec:
       type: string
   steps:
     - image: >-
-        image-registry.openshift-image-registry.svc:5000/openshift/ubi-minimal:8.3
+        image-registry.openshift-image-registry.svc:5000/openshift/ubi-minimal:8.2
       name: mvn-settings
       resources: {}
       script: >
