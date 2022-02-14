@@ -1,0 +1,42 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: nodejs-build-custom
+spec:
+  description: nodejs task builds.
+  params:
+    - default: 14-ubi8
+      description: The tag of nodejs imagestream for nodejs version
+      name: VERSION
+      type: string
+    - default: .
+      description: The location of the path to run s2i from.
+      name: PATH_CONTEXT
+      type: string
+    - default: ''
+      name: CUSTOM_COMMAND
+      type: string
+      description: If exists use this command
+  results:
+    - description: Digest of the image just built.
+      name: IMAGE_DIGEST
+  steps:
+    - image: >-
+        image-registry.openshift-image-registry.svc:5000/openshift/nodejs:$(params.VERSION)
+      name: node-build
+      resources: {}
+      script: |
+        #!/usr/bin/env bash
+
+        cd source/$(params.PATH_CONTEXT)
+
+        if [ -z $(params.CUSTOM_COMMAND) ]; then    
+          echo "npm install && npm run ocp"
+          npm install && npm run ocp
+        else
+          echo "Comando Custom: $(params.CUSTOM_COMMAND)"
+          $(params.CUSTOM_COMMAND)
+        fi
+  workspaces:
+    - description: The workspace node project.
+      name: source

@@ -1,0 +1,28 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: oc-tag-custom
+spec:
+  params:
+    - name: SRC_NAMESPACE
+      type: string
+    - name: SRC_IMAGE
+      type: string
+    - name: SRC_TAG
+      type: string
+    - name: DST_NAMESPACE
+      type: string
+    - name: DST_IMAGE
+      type: string
+    - name: DST_TAG
+      type: string
+  steps:
+    - image: 'image-registry.openshift-image-registry.svc:5000/openshift/cli:latest'
+      name: tag
+      script: >
+        oc tag \
+          $(params.SRC_NAMESPACE)/$(params.SRC_IMAGE):$(params.SRC_TAG) \
+          $(params.DST_NAMESPACE)/$(params.DST_IMAGE):$(params.DST_TAG)
+          
+        oc label imagestream $(params.DST_IMAGE) app=$(params.DST_IMAGE)
+        --overwrite

@@ -1,0 +1,98 @@
+apiVersion: template.openshift.io/v1
+kind: Template 
+metadata:
+  name: manifest-cd-pipeline-template
+  namespace: openshift
+  annotations:
+    description: Template para aprovisionar recursos para pipelines
+parameters:
+  - name: APP_NAME
+    required: true
+  - name: GIT_KUSTOMIZE
+    required: true
+  - name: BASE_PROJECT
+    required: true
+objects:
+- apiVersion: tekton.dev/v1beta1
+  kind: Pipeline
+  metadata:
+    name: ${APP_NAME}-manifest-cd-pipeline
+  spec:
+    params:
+      - default: ${APP_NAME}
+        description: The application deployment name
+        name: APP_NAME
+        type: string
+      - default: ${GIT_KUSTOMIZE}
+        description: The kustomize git repository url
+        name: KUSTOMIZE_GIT_URL
+        type: string
+      - default: master
+        description: The kustomize git repository revision
+        name: KUSTOMIZE_GIT_REVISION
+        type: string
+      - default: /
+        description: The subdirectory in the kustomize git repository
+        name: KUSTOMIZE_GIT_CONTEXT_DIR
+        type: string
+      - default: overlays/uat/deployment-patches.yaml
+        description: The YAML file in which to patch the image
+        name: KUSTOMIZE_GIT_FILE_NAME
+        type: string
+      - default: ${BASE_PROJECT}
+        description: Namespace where the buildconfig is located
+        name: BASE_PROJECT
+        type: string
+    tasks:
+      - name: git-clone
+        retries: 2
+        params:
+          - name: url
+            value: $(params.KUSTOMIZE_GIT_URL)
+          - name: revision
+            value: $(params.KUSTOMIZE_GIT_REVISION)
+          - name: subdirectory
+            value: $(params.KUSTOMIZE_GIT_CONTEXT_DIR)
+          - name: deleteExisting
+            value: 'true'
+        taskRef:
+          kind: ClusterTask
+          name: git-clone
+        workspaces:
+          - name: output
+            workspace: app-source
+      - name: get-image-tag
+        retries: 2
+        params:
+          - name: fileName
+            value: $(params.KUSTOMIZE_GIT_FILE_NAME)
+        runAfter:
+          - git-clone
+        taskRef:
+          kind: ClusterTask
+          name: get-image-tag-custom
+        workspaces:
+          - name: output
+            workspace: app-source
+      - name: tag
+        retries: 3
+        params:
+          - name: SRC_NAMESPACE
+            value: qa-${BASE_PROJECT}
+          - name: SRC_IMAGE
+            value: $(params.APP_NAME)
+          - name: SRC_TAG
+            value: $(tasks.get-image-tag.results.image-tag)
+          - name: DST_NAMESPACE
+            value: uat-${BASE_PROJECT}
+          - name: DST_IMAGE
+            value: $(params.APP_NAME)
+          - name: DST_TAG
+            value: $(tasks.get-image-tag.results.image-tag)
+        runAfter:
+          - get-image-tag
+        taskRef:
+          kind: ClusterTask
+          name: oc-tag-custom      
+    workspaces:
+      - name: app-source

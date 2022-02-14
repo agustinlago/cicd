@@ -1,0 +1,29 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: get-image-tag-custom
+  annotations:
+    tekton.dev/displayName: "Get Image Tag of Deployment patch"
+spec:
+  params:
+    - default: ./deployment-patch.yaml
+      description: Name of the file to be updated
+      name: fileName
+      type: string
+  results:
+    - description: The current date in human readable format
+      name: image-tag
+  steps:
+    - image: >-
+        image-registry.openshift-image-registry.svc:5000/openshift/ubi-minimal:8.3
+      name: generate-image-tag
+      resources: {}
+      script: >
+        #!/bin/sh
+
+        grep image "$(workspaces.output.path)/$(params.fileName)" | cut -d: -f4
+        > tag.txt
+        
+        tr --delete "[:cntrl:]" <tag.txt >\$(results.image-tag.path)
+  workspaces:
+    - name: output

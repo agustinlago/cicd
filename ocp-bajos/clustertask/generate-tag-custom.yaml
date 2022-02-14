@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: generate-tag-custom
+  annotations:
+    description: |
+      Generate a new unique image tag based on format YYYY-MM-YY-HH-MM-SS.
+spec:
+  results:
+    - description: The current date in human readable format
+      name: image-tag
+  steps:
+    - image: >-
+        image-registry.openshift-image-registry.svc:5000/openshift/ubi-minimal:8.3
+      name: generate-image-tag
+      resources: {}
+      script: |
+        #!/usr/bin/env bash
+        date +%Y-%m-%d-%H-%M-%S | tee /tmp/date.txt
+        # Trim the string to remove newline from the end
+        tr --delete "[:cntrl:]" </tmp/date.txt >\$(results.image-tag.path)
