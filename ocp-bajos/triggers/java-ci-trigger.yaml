@@ -1,0 +1,30 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: Trigger
+metadata:
+  name: java-ci-trigger
+  namespace: cicd
+spec:
+  bindings:
+    - kind: TriggerBinding
+      ref: gitlab-trigger-binding
+  interceptors:
+    - params:
+        - name: secretRef
+          value: null
+        - name: eventTypes
+          value:
+            - Push Hook
+      ref:
+        kind: ClusterInterceptor
+        name: gitlab
+    - params:
+        - name: filter
+          value: 'body.ref.split("/")[2] == "develop"'
+        - name: overlays
+          value: null
+      ref:
+        kind: ClusterInterceptor
+        name: cel
+  serviceAccountName: pipeline
+  template:
+    ref: java-ci-trigger-template

@@ -1,0 +1,42 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: nodejs-cd-trigger-template
+  namespace: cicd
+spec:
+  params:
+    - description: The git repository url
+      name: git-repo-url
+    - default: develop
+      description: The git revision
+      name: git-revision
+    - description: The name of the deployment to be created / patched
+      name: app-name
+    - description: The prefix of namespace
+      name: base-project
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: $(tt.params.app-name)-nodejs-cd-pipeline-
+        namespace: qa-$(tt.params.base-project)
+      spec:
+        params:
+          - name: deployment-name
+            value: $(tt.params.app-name)
+          - name: git-url
+            value: $(tt.params.git-repo-url)
+          - name: git-revision
+            value: $(tt.params.git-revision)
+          - name: IMAGE
+            value: >-
+              image-registry.openshift-image-registry.svc:5000/qa-$(tt.params.base-project)/$(tt.params.app-name)
+        pipelineRef:
+          name: $(tt.params.app-name)-nodejs-cd-pipeline
+        serviceAccountName: pipeline
+        workspaces:
+          - name: app-source
+            persistentVolumeClaim:
+              claimName: workspace-pvc
+          - emptyDir: {}
+            name: images-url

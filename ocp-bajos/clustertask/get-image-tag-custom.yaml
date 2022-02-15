@@ -15,7 +15,7 @@ spec:
       name: image-tag
   steps:
     - image: >-
-        image-registry.openshift-image-registry.svc:5000/openshift/ubi-minimal:8.3
+        registry.access.redhat.com/ubi8/ubi-minimal:8.2
       name: generate-image-tag
       resources: {}
       script: >

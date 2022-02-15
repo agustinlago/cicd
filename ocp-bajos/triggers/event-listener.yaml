@@ -1,0 +1,15 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: event-listener
+  namespace: cicd
+  finalizers:
+    - eventlisteners.triggers.tekton.dev
+spec:
+  serviceAccountName: pipeline
+  triggers:
+    - triggerRef: java-ci-trigger
+    - triggerRef: java-cd-trigger
+    - triggerRef: nodejs-ci-trigger
+    - triggerRef: nodejs-cd-trigger
+    - triggerRef: manifest-cd-trigger

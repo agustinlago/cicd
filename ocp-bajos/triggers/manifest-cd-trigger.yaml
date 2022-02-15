@@ -1,0 +1,30 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: Trigger
+metadata:
+  name: manifest-cd-trigger
+  namespace: cicd
+spec:
+  bindings:
+    - kind: TriggerBinding
+      ref: gitlab-trigger-binding
+  interceptors:
+    - params:
+        - name: secretRef
+          value: null
+        - name: eventTypes
+          value:
+            - Push Hook
+      ref:
+        kind: ClusterInterceptor
+        name: gitlab
+    - params:
+        - name: filter
+          value: 'body.commits[0].modified[0].split("/")[1] == "uat"'
+        - name: overlays
+          value: null
+      ref:
+        kind: ClusterInterceptor
+        name: cel
+  serviceAccountName: pipeline
+  template:
+    ref: manifest-cd-trigger-template

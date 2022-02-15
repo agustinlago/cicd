@@ -1,0 +1,22 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: Trigger
+metadata:
+  name: nodejs-cd-trigger
+  namespace: cicd
+spec:
+  bindings:
+    - kind: TriggerBinding
+      ref: gitlab-trigger-binding
+  interceptors:
+    - params:
+        - name: secretRef
+          value: null
+        - name: eventTypes
+          value:
+            - Merge Request Hook
+      ref:
+        kind: ClusterInterceptor
+        name: gitlab
+  serviceAccountName: pipeline
+  template:
+    ref: nodejs-cd-trigger-template

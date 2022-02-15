@@ -1,0 +1,14 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: event-listener
+  namespace: cicd
+spec:
+  host: #COMPLETAR
+  to:
+    kind: Service
+    name: el-event-listener
+    weight: 100
+  port:
+    targetPort: http-listener
+  wildcardPolicy: None

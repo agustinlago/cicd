@@ -1,0 +1,15 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: gitlab-trigger-binding
+  namespace: cicd
+spec:
+  params:
+    - name: git-repo-url
+      value: 'ssh://$(git_url)/$(body.project.path_with_namespace).git'
+    - name: app-name
+      value: $(body.project.name)
+    - name: git-revision
+      value: $(body.ref)
+    - name: base-project
+      value: $(body.project.namespace)
