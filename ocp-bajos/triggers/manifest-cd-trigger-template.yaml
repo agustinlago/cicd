@@ -7,7 +7,7 @@ spec:
   params:
     - description: The git repository url
       name: git-repo-url
-    - default: master
+    - default: main
       description: The git revision
       name: git-revision
     - description: The name of the deployment to be created / patched
